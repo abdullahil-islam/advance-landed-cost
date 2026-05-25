@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+
         <!--
-            Multi-company record rules are added here as models are created
-            in Phase 2 onward. Each rule uses the domain:
-            ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]
-            so users see their own company's records plus any global records
-            (company_id = False).
+            Multi-company record rules.
+            Domain: users see their own company's records OR global records
+            (company_id = False — shared across all companies).
+            Rules are added here as each model is created.
         -->
+
+        <!-- Phase 2: HS Code -->
+        <record id="rule_customs_hs_code_company" model="ir.rule">
+            <field name="name">HS Code: Multi-Company</field>
+            <field name="model_id" ref="model_customs_hs_code"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!--
+            Phase 3+ rules (duty region, levy, rate, landed cost line, override logs)
+            are added alongside their respective model files.
+        -->
+
     </data>
 </odoo>

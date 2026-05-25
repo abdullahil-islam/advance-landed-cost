@@ -1,2 +1,3 @@
-# Models are imported here as they are created in each phase.
-# Phase 1: scaffold only — model imports added from Phase 2 onward.
+from . import customs_hs_code
+from . import product_category
+from . import product_template

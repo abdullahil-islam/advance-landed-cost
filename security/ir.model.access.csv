@@ -1,1 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_customs_hs_code_user,customs.hs.code (Customs User),model_customs_hs_code,advance_landed_cost.group_customs_user,1,1,1,0
+access_customs_hs_code_manager,customs.hs.code (Customs Manager),model_customs_hs_code,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_hs_code_finance,customs.hs.code (Finance Manager),model_customs_hs_code,advance_landed_cost.group_finance_manager,1,0,0,0

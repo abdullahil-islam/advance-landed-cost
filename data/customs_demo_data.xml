@@ -1,9 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+
         <!--
-            Demo data is added per phase alongside the models they reference.
-            Phase 2+: HS codes, duty regions, duty rates, sample products.
+            Demo HS codes — global (company_id = False) so they are available
+            to all companies out of the box.
         -->
+
+        <record id="hs_code_steel_flat_rolled" model="customs.hs.code">
+            <field name="name">7208.10</field>
+            <field name="description">Flat-rolled products of iron or non-alloy steel, hot-rolled, in coils</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="hs_code_electronic_circuits" model="customs.hs.code">
+            <field name="name">8542.31</field>
+            <field name="description">Electronic integrated circuits — processors and controllers</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="hs_code_cotton_fabric" model="customs.hs.code">
+            <field name="name">5208.11</field>
+            <field name="description">Woven fabrics of cotton, unbleached, plain weave, ≤100 g/m²</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="hs_code_plastic_granules" model="customs.hs.code">
+            <field name="name">3901.10</field>
+            <field name="description">Polyethylene having a specific gravity of less than 0.94, in primary forms</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="hs_code_passenger_vehicles" model="customs.hs.code">
+            <field name="name">8703.23</field>
+            <field name="description">Motor cars with spark-ignition engine, cylinder capacity 1,500–3,000 cc</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
     </data>
 </odoo>

@@ -32,7 +32,11 @@
         # Data
         'data/ir_sequence_data.xml',
         'data/customs_demo_data.xml',
-        # Views — added per phase
+        # Views — Phase 2: HS Code Management
+        'views/customs_hs_code_views.xml',
+        'views/product_category_views.xml',
+        'views/product_template_views.xml',
+        # Menus — after all actions are defined
         'views/menus.xml',
     ],
     'assets': {

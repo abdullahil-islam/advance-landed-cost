@@ -2,18 +2,27 @@
 <odoo>
     <data>
 
-        <!--
-            Top-level menu anchor under Inventory.
-            Sub-menus for HS Codes, Duty Rates, Regions, Levies, and Settings
-            are added alongside their respective view files in Phase 2 and 3.
-        -->
-
+        <!-- Root menu under Inventory → Configuration -->
         <menuitem
             id="menu_advance_landed_cost_root"
             name="Customs Duties"
             parent="stock.menu_stock_config_settings"
             sequence="50"
             groups="advance_landed_cost.group_customs_user"/>
+
+        <!-- Phase 2: HS Code Management -->
+        <menuitem
+            id="menu_customs_hs_code"
+            name="HS Codes"
+            parent="advance_landed_cost.menu_advance_landed_cost_root"
+            action="advance_landed_cost.action_customs_hs_code"
+            sequence="10"
+            groups="advance_landed_cost.group_customs_user"/>
+
+        <!--
+            Phase 3 menu items (Duty Regions, Duty Levies, Duty Rates)
+            are added alongside their view files.
+        -->
 
     </data>
 </odoo>
