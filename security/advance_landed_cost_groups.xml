@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--
+            Three roles with escalating permissions:
+            Customs User  →  Customs Manager  →  Finance Manager
+        -->
+
+        <record id="group_customs_user" model="res.groups">
+            <field name="name">Customs User</field>
+            <field name="category_id" ref="base.module_category_inventory"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">
+                Day-to-day data entry: create and edit landed costs, view HS codes and rates.
+            </field>
+        </record>
+
+        <record id="group_customs_manager" model="res.groups">
+            <field name="name">Customs Manager</field>
+            <field name="category_id" ref="base.module_category_inventory"/>
+            <field name="implied_ids" eval="[(4, ref('advance_landed_cost.group_customs_user'))]"/>
+            <field name="comment">
+                Rate setup, manual overrides, and approvals up to Confirmed state.
+            </field>
+        </record>
+
+        <record id="group_finance_manager" model="res.groups">
+            <field name="name">Customs Finance Manager</field>
+            <field name="category_id" ref="base.module_category_inventory"/>
+            <field name="implied_ids" eval="[(4, ref('advance_landed_cost.group_customs_manager'))]"/>
+            <field name="comment">
+                Final approval and accounting sign-off. Can approve and validate landed costs.
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--
+            Top-level menu anchor under Inventory.
+            Sub-menus for HS Codes, Duty Rates, Regions, Levies, and Settings
+            are added alongside their respective view files in Phase 2 and 3.
+        -->
+
+        <menuitem
+            id="menu_advance_landed_cost_root"
+            name="Customs Duties"
+            parent="stock.menu_stock_config_settings"
+            sequence="50"
+            groups="advance_landed_cost.group_customs_user"/>
+
+    </data>
+</odoo>

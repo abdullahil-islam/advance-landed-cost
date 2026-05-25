@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--
+            Demo data is added per phase alongside the models they reference.
+            Phase 2+: HS codes, duty regions, duty rates, sample products.
+        -->
+    </data>
+</odoo>
