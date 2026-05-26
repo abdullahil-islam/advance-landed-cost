@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List view -->
+        <record id="view_customs_duty_region_list" model="ir.ui.view">
+            <field name="name">customs.duty.region.list</field>
+            <field name="model">customs.duty.region</field>
+            <field name="arch" type="xml">
+                <list string="Trade Regions">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="country_ids" widget="many2many_tags"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form view -->
+        <record id="view_customs_duty_region_form" model="ir.ui.view">
+            <field name="name">customs.duty.region.form</field>
+            <field name="model">customs.duty.region</field>
+            <field name="arch" type="xml">
+                <form string="Trade Region">
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived"
+                                bg_color="text-bg-danger"
+                                invisible="active"/>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. European Union"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="code" placeholder="e.g. EU"/>
+                                <field name="active" widget="boolean_toggle"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        <group string="Member Countries">
+                            <field name="country_ids"
+                                   widget="many2many_tags"
+                                   nolabel="1"
+                                   placeholder="Add countries..."/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search view -->
+        <record id="view_customs_duty_region_search" model="ir.ui.view">
+            <field name="name">customs.duty.region.search</field>
+            <field name="model">customs.duty.region</field>
+            <field name="arch" type="xml">
+                <search string="Search Regions">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="country_ids" string="Country"/>
+                    <filter string="Active" name="active"
+                            domain="[('active', '=', True)]"/>
+                    <filter string="Archived" name="inactive"
+                            domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_company" string="Company"
+                                context="{'group_by': 'company_id'}"
+                                groups="base.group_multi_company"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Window action -->
+        <record id="action_customs_duty_region" model="ir.actions.act_window">
+            <field name="name">Trade Regions</field>
+            <field name="res_model">customs.duty.region</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Trade Region
+                </p>
+                <p>
+                    Group countries into trade regions (e.g. EU, ASEAN, GCC)
+                    to apply a single duty rate to all member countries.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

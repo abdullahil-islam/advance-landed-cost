@@ -6,7 +6,6 @@
             Multi-company record rules.
             Domain: users see their own company's records OR global records
             (company_id = False — shared across all companies).
-            Rules are added here as each model is created.
         -->
 
         <!-- Phase 2: HS Code -->
@@ -17,9 +16,33 @@
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         </record>
 
+        <!-- Phase 3: Duty Region -->
+        <record id="rule_customs_duty_region_company" model="ir.rule">
+            <field name="name">Duty Region: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_region"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 3: Duty Levy -->
+        <record id="rule_customs_duty_levy_company" model="ir.rule">
+            <field name="name">Duty Levy: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_levy"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 3: Duty Rate -->
+        <record id="rule_customs_duty_rate_company" model="ir.rule">
+            <field name="name">Duty Rate: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_rate"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
         <!--
-            Phase 3+ rules (duty region, levy, rate, landed cost line, override logs)
-            are added alongside their respective model files.
+            Phase 4+ rules (landed cost line, override logs) are added
+            alongside their respective model files.
         -->
 
     </data>

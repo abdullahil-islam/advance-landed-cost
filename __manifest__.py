@@ -36,6 +36,11 @@
         'views/customs_hs_code_views.xml',
         'views/product_category_views.xml',
         'views/product_template_views.xml',
+        # Views — Phase 3: Rate Configuration
+        'views/customs_duty_region_views.xml',
+        'views/customs_duty_levy_views.xml',
+        'views/customs_duty_rate_views.xml',
+        'views/res_config_settings_views.xml',
         # Menus — after all actions are defined
         'views/menus.xml',
     ],

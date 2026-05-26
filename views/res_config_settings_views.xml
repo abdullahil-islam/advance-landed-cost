@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_res_config_settings_customs" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.inherit.advance_landed_cost</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//app[@string='Inventory']" position="inside">
+
+                    <block title="Customs Duties — Levy Settings"
+                           name="advance_landed_cost_levies">
+                        <setting string="VAT on Customs"
+                                 help="Include VAT in customs duty calculations.">
+                            <field name="customs_enable_vat"/>
+                        </setting>
+                        <setting string="CESS"
+                                 help="Include CESS (Customs and Excise Special Surcharge) in calculations.">
+                            <field name="customs_enable_cess"/>
+                        </setting>
+                        <setting string="SSCL"
+                                 help="Include SSCL (Social Security Contribution Levy) in calculations.">
+                            <field name="customs_enable_sscl"/>
+                        </setting>
+                        <setting string="10% CIF Uplift"
+                                 help="Multiply CIF × 1.10 as the base for VAT, CESS, and SSCL. Customs duty itself is always on the original CIF.">
+                            <field name="customs_cif_uplift"/>
+                        </setting>
+                        <setting string="Allow Manual Duty Override"
+                                 help="Allow Customs Managers to manually adjust computed duty amounts. Each override is logged for audit.">
+                            <field name="customs_allow_manual_override"/>
+                        </setting>
+                    </block>
+
+                    <block title="Customs Duties — Accounting Accounts"
+                           name="advance_landed_cost_accounts">
+                        <setting string="Customs Duty Payable"
+                                 help="Account credited when customs duty is posted.">
+                            <field name="customs_duty_payable_account_id"/>
+                        </setting>
+                        <setting string="VAT Receivable"
+                                 help="Account debited for input VAT on imports.">
+                            <field name="customs_vat_receivable_account_id"/>
+                        </setting>
+                        <setting string="VAT Payable"
+                                 help="Account credited for VAT payable to customs.">
+                            <field name="customs_vat_payable_account_id"/>
+                        </setting>
+                        <setting string="Freight Payable"
+                                 help="Account credited when freight charges are posted.">
+                            <field name="customs_freight_payable_account_id"/>
+                        </setting>
+                        <setting string="Insurance Payable"
+                                 help="Account credited when insurance charges are posted.">
+                            <field name="customs_insurance_payable_account_id"/>
+                        </setting>
+                    </block>
+
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

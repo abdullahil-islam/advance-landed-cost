@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- List view -->
+        <record id="view_customs_duty_rate_list" model="ir.ui.view">
+            <field name="name">customs.duty.rate.list</field>
+            <field name="model">customs.duty.rate</field>
+            <field name="arch" type="xml">
+                <list string="Duty Rates" decoration-muted="not active">
+                    <field name="hs_code_id"/>
+                    <field name="scope_display" string="Scope"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                    <field name="duty_rate" string="Duty %"/>
+                    <field name="vat_rate" string="VAT %"/>
+                    <field name="cess_rate" string="CESS %"/>
+                    <field name="sscl_rate" string="SSCL %"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="active" column_invisible="True"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form view -->
+        <record id="view_customs_duty_rate_form" model="ir.ui.view">
+            <field name="name">customs.duty.rate.form</field>
+            <field name="model">customs.duty.rate</field>
+            <field name="arch" type="xml">
+                <form string="Duty Rate">
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived"
+                                bg_color="text-bg-danger"
+                                invisible="active"/>
+                        <div class="oe_title">
+                            <label for="hs_code_id"/>
+                            <h1>
+                                <field name="hs_code_id"
+                                       placeholder="Select HS Code..."/>
+                            </h1>
+                            <div class="o_field_badge">
+                                <field name="scope_display" widget="badge"/>
+                            </div>
+                        </div>
+                        <group>
+                            <group string="Scope">
+                                <field name="country_id"
+                                       invisible="region_id"/>
+                                <field name="region_id"
+                                       invisible="country_id"/>
+                                <field name="active" widget="boolean_toggle"/>
+                                <field name="company_id"
+                                       groups="base.group_multi_company"/>
+                            </group>
+                            <group string="Validity Period">
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </group>
+                        </group>
+                        <group string="Rates">
+                            <group>
+                                <field name="duty_rate" string="Customs Duty (%)"/>
+                                <field name="vat_rate" string="VAT (%)"/>
+                            </group>
+                            <group>
+                                <field name="cess_rate" string="CESS (%)"/>
+                                <field name="sscl_rate" string="SSCL (%)"/>
+                            </group>
+                        </group>
+                        <group string="Notes">
+                            <field name="notes" nolabel="1"
+                                   placeholder="Optional notes about this rate, e.g. policy reference..."/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Search view -->
+        <record id="view_customs_duty_rate_search" model="ir.ui.view">
+            <field name="name">customs.duty.rate.search</field>
+            <field name="model">customs.duty.rate</field>
+            <field name="arch" type="xml">
+                <search string="Search Duty Rates">
+                    <field name="hs_code_id"/>
+                    <field name="country_id"/>
+                    <field name="region_id"/>
+                    <filter string="Active" name="active"
+                            domain="[('active', '=', True)]"/>
+                    <filter string="Archived" name="inactive"
+                            domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="Global Rates" name="global"
+                            domain="[('country_id', '=', False), ('region_id', '=', False)]"/>
+                    <filter string="Country-Specific" name="by_country"
+                            domain="[('country_id', '!=', False)]"/>
+                    <filter string="Region-Based" name="by_region"
+                            domain="[('region_id', '!=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="group_by_hs_code" string="HS Code"
+                                context="{'group_by': 'hs_code_id'}"/>
+                        <filter name="group_by_country" string="Country"
+                                context="{'group_by': 'country_id'}"/>
+                        <filter name="group_by_company" string="Company"
+                                context="{'group_by': 'company_id'}"
+                                groups="base.group_multi_company"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Window action -->
+        <record id="action_customs_duty_rate" model="ir.actions.act_window">
+            <field name="name">Duty Rates</field>
+            <field name="res_model">customs.duty.rate</field>
+            <field name="view_mode">list,form</field>
+            <field name="context">{'search_default_active': 1}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first Duty Rate
+                </p>
+                <p>
+                    Configure duty, VAT, CESS, and SSCL percentages for each HS code
+                    by country of origin or trade region. Use date ranges to preserve
+                    historical rates when policy changes.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>
