@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import UserError
 
 
 class CustomsLandedCostLine(models.Model):
@@ -43,6 +44,15 @@ class CustomsLandedCostLine(models.Model):
         help='Insurance share allocated to this line. Auto-distributed from linked insurance bills.',
     )
 
+    # ── Manual CIF override ──────────────────────────────────────────────────
+    # When manual_override=True, _compute_cif uses cif_override instead of
+    # product_cost + freight + insurance. The user sets cif_override directly.
+    cif_override = fields.Monetary(
+        'Manual CIF',
+        currency_field='currency_id',
+        help='CIF value entered manually. Active only when Manual Override is enabled.',
+    )
+
     # ── CIF outputs (computed, stored) ───────────────────────────────────────
     cif_value = fields.Monetary(
         'CIF Value',
@@ -58,12 +68,34 @@ class CustomsLandedCostLine(models.Model):
         help='Base used for VAT/CESS/SSCL: CIF × 1.10 when the 10% uplift setting is enabled.',
     )
 
+    # ── Manual duty override values ───────────────────────────────────────────
+    # When manual_override=True, _compute_duties outputs these stored values
+    # instead of recalculating from the rate table. The duty override wizard
+    # writes here; the computed duty_amount/vat_amount/etc. fields just echo them.
+    duty_amount_override = fields.Monetary(
+        'Override Duty',
+        currency_field='currency_id',
+        help='Manually set duty amount. Active only when Manual Override is enabled.',
+    )
+    vat_amount_override = fields.Monetary(
+        'Override VAT',
+        currency_field='currency_id',
+    )
+    cess_amount_override = fields.Monetary(
+        'Override CESS',
+        currency_field='currency_id',
+    )
+    sscl_amount_override = fields.Monetary(
+        'Override SSCL',
+        currency_field='currency_id',
+    )
+
     # ── Duty outputs (computed, stored) ──────────────────────────────────────
     duty_rate_id = fields.Many2one(
         'customs.duty.rate',
         string='Applied Rate',
         readonly=True,
-        help='The duty rate record that was used to compute this line.',
+        help='The duty rate record used to compute this line. Empty when manual override is active.',
     )
     duty_amount = fields.Monetary(
         'Duty',
@@ -99,7 +131,8 @@ class CustomsLandedCostLine(models.Model):
     # ── Override controls ────────────────────────────────────────────────────
     manual_override = fields.Boolean(
         'Manual Override',
-        help='When enabled, CIF and duty values are locked and not recalculated automatically.',
+        help='When enabled, CIF and duty values are taken from the override fields '
+             'instead of being recalculated automatically.',
     )
     override_reason = fields.Text('Override Reason')
 
@@ -114,6 +147,21 @@ class CustomsLandedCostLine(models.Model):
         related='landed_cost_id.company_id',
         store=True,
     )
+
+    # ── ORM: write guard ─────────────────────────────────────────────────────
+
+    def write(self, vals):
+        if not self.env.context.get('bypass_lock'):
+            locked = self.filtered(
+                lambda l: l.landed_cost_id.customs_state in ('approved', 'done')
+            )
+            if locked:
+                names = ', '.join(locked.mapped('product_id.display_name'))
+                raise UserError(
+                    f"The following lines are locked because the landed cost is "
+                    f"in Approved or Done state: {names}"
+                )
+        return super().write(vals)
 
     # ── Computed: HS Code resolution ─────────────────────────────────────────
 
@@ -134,24 +182,30 @@ class CustomsLandedCostLine(models.Model):
                 line.hs_code_id = False
 
     # ── Computed: CIF value and tax base ─────────────────────────────────────
+    # When manual_override=True  → use cif_override as the CIF value.
+    # When manual_override=False → compute CIF from product_cost + freight + insurance.
 
-    @api.depends('product_cost', 'freight', 'insurance', 'manual_override')
+    @api.depends(
+        'product_cost', 'freight', 'insurance',
+        'manual_override', 'cif_override',
+    )
     def _compute_cif(self):
         for line in self:
-            if line.manual_override:
-                continue
-            cif = line.product_cost + line.freight + line.insurance
+            cif = line.cif_override if line.manual_override else (
+                line.product_cost + line.freight + line.insurance
+            )
             company = line.company_id or self.env.company
             line.cif_value = cif
             line.tax_base = cif * 1.10 if company.customs_cif_uplift else cif
 
     # ── Computed: duty, VAT, CESS, SSCL ──────────────────────────────────────
+    # When manual_override=True  → echo the *_override fields as the outputs.
+    # When manual_override=False → look up the rate table and calculate.
 
     @api.depends(
-        'cif_value',
-        'tax_base',
-        'hs_code_id',
-        'manual_override',
+        'cif_value', 'tax_base', 'hs_code_id', 'manual_override',
+        'duty_amount_override', 'vat_amount_override',
+        'cess_amount_override', 'sscl_amount_override',
         'landed_cost_id.country_of_origin_id',
     )
     def _compute_duties(self):
@@ -159,7 +213,17 @@ class CustomsLandedCostLine(models.Model):
         today = fields.Date.today()
         for line in self:
             if line.manual_override:
+                line.duty_amount = line.duty_amount_override
+                line.vat_amount = line.vat_amount_override
+                line.cess_amount = line.cess_amount_override
+                line.sscl_amount = line.sscl_amount_override
+                line.total_taxes = (
+                    line.duty_amount_override + line.vat_amount_override
+                    + line.cess_amount_override + line.sscl_amount_override
+                )
+                line.duty_rate_id = False
                 continue
+
             if not line.hs_code_id:
                 line.duty_amount = 0.0
                 line.vat_amount = 0.0
@@ -168,6 +232,7 @@ class CustomsLandedCostLine(models.Model):
                 line.total_taxes = 0.0
                 line.duty_rate_id = False
                 continue
+
             company = line.company_id or self.env.company
             country_id = line.landed_cost_id.country_of_origin_id.id
             rate = rate_model.get_applicable_rate(
@@ -193,6 +258,7 @@ class CustomsLandedCostLine(models.Model):
                 line.vat_amount = 0.0
                 line.cess_amount = 0.0
                 line.sscl_amount = 0.0
+
             line.total_taxes = (
                 line.duty_amount + line.vat_amount
                 + line.cess_amount + line.sscl_amount

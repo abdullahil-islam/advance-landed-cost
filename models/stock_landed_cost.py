@@ -63,6 +63,20 @@ class StockLandedCost(models.Model):
         domain=[('customs_bill_type', '=', 'insurance')],
     )
 
+    # ── Audit logs ────────────────────────────────────────────────────────────
+    cif_override_log_ids = fields.One2many(
+        'customs.cif.override.log',
+        'landed_cost_id',
+        string='CIF Override Log',
+        readonly=True,
+    )
+    duty_override_log_ids = fields.One2many(
+        'customs.duty.override.log',
+        'landed_cost_id',
+        string='Duty Override Log',
+        readonly=True,
+    )
+
     # ── Running totals ────────────────────────────────────────────────────────
     total_product_cost = fields.Monetary(
         'Total Product Cost',
@@ -185,6 +199,7 @@ class StockLandedCost(models.Model):
             if record.customs_state != 'draft':
                 raise UserError("Only draft records can be confirmed.")
             record._validate_hs_codes()
+            record._check_missing_rates()
         self.write({'customs_state': 'confirmed'})
 
     def action_approve(self):
@@ -225,6 +240,30 @@ class StockLandedCost(models.Model):
             raise ValidationError(
                 f"The following products are missing an HS Code: {names}\n"
                 f"Please assign HS codes before confirming."
+            )
+
+    def _check_missing_rates(self):
+        """Post a warning on the chatter for lines with no applicable duty rate."""
+        rate_model = self.env['customs.duty.rate']
+        today = fields.Date.today()
+        company = self.company_id or self.env.company
+        country_id = self.country_of_origin_id.id
+        missing = []
+        for line in self.customs_line_ids.filtered(
+            lambda l: l.hs_code_id and not l.manual_override
+        ):
+            rate = rate_model.get_applicable_rate(
+                line.hs_code_id.id, country_id, today, company.id
+            )
+            if not rate:
+                missing.append(line.product_id.display_name)
+        if missing:
+            self.message_post(
+                body=(
+                    "⚠ No duty rate found for the following products — "
+                    "duty will be calculated as zero: "
+                    + ", ".join(missing)
+                )
             )
 
     # ── CIF Distribution Engine (Phase 5) ────────────────────────────────────
@@ -291,6 +330,16 @@ class StockLandedCost(models.Model):
             weights = {lid: 1.0 for lid in weights}
 
         return weights
+
+    def action_open_duty_override_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'customs.duty.override.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_landed_cost_id': self.id},
+        }
 
     # ── Bill generation (Phase 7 adds full implementation) ───────────────────
 

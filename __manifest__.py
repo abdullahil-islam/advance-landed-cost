@@ -46,6 +46,8 @@
         'views/account_move_views.xml',
         # Wizards — Phase 5: CIF Engine
         'wizard/customs_recalculate_wizard_views.xml',
+        # Wizards — Phase 6: Duty Override
+        'wizard/customs_duty_override_wizard_views.xml',
         # Menus — after all actions are defined
         'views/menus.xml',
     ],

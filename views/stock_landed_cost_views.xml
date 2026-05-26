@@ -86,6 +86,9 @@
                                 <field name="product_cost"/>
                                 <field name="freight" readonly="1" optional="show"/>
                                 <field name="insurance" readonly="1" optional="show"/>
+                                <field name="cif_override"
+                                       optional="show"
+                                       invisible="not manual_override"/>
                                 <field name="cif_value" readonly="1"/>
                                 <field name="manual_override" optional="show"/>
                                 <field name="override_reason"
@@ -104,6 +107,17 @@
 
                     <!-- Tab: Duty Calculations -->
                     <page name="duty_calculations" string="Duty Calculations">
+                        <div class="d-flex gap-2 mb-2">
+                            <button name="action_open_duty_override_wizard"
+                                    type="object"
+                                    string="Manual Duty Override"
+                                    class="btn-secondary"
+                                    invisible="customs_state in ('approved', 'done')"
+                                    groups="advance_landed_cost.group_customs_manager"
+                                    help="Manually override duty, VAT, CESS and SSCL
+                                          for a specific line. Requires Customs Manager
+                                          access and a mandatory reason."/>
+                        </div>
                         <field name="customs_line_ids" readonly="1">
                             <list>
                                 <field name="product_id"/>
@@ -190,6 +204,38 @@
                                 </list>
                             </field>
                         </group>
+                    </page>
+
+                    <!-- Tab: CIF Override Log -->
+                    <page name="cif_override_log" string="CIF Override Log"
+                          groups="advance_landed_cost.group_customs_manager">
+                        <field name="cif_override_log_ids" readonly="1">
+                            <list>
+                                <field name="timestamp"/>
+                                <field name="user_id"/>
+                                <field name="line_id"/>
+                                <field name="old_cif"/>
+                                <field name="new_cif"/>
+                                <field name="reason"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Tab: Duty Override Log -->
+                    <page name="duty_override_log" string="Duty Override Log"
+                          groups="advance_landed_cost.group_customs_manager">
+                        <field name="duty_override_log_ids" readonly="1">
+                            <list>
+                                <field name="timestamp"/>
+                                <field name="user_id"/>
+                                <field name="line_id"/>
+                                <field name="old_duty"/>
+                                <field name="new_duty"/>
+                                <field name="reason"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
                     </page>
 
                 </xpath>
