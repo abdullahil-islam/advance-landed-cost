@@ -23,6 +23,15 @@ class ResCompany(models.Model):
         help='Allow Customs Managers to manually override computed duty amounts.',
     )
 
+    # ── Journal for customs duty entries ─────────────────────────────────────
+    customs_journal_id = fields.Many2one(
+        'account.journal',
+        string='Customs Journal',
+        domain=[('type', '=', 'general')],
+        help='Journal used for customs duty journal entries posted at validation. '
+             'Falls back to any general journal if not set.',
+    )
+
     # ── Accounting accounts (used in Phase 8 journal entries) ─────────────────
     customs_duty_payable_account_id = fields.Many2one(
         'account.account',
@@ -53,6 +62,13 @@ class ResCompany(models.Model):
 
 class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
+
+    # Journal
+    customs_journal_id = fields.Many2one(
+        related='company_id.customs_journal_id',
+        readonly=False,
+        string='Customs Journal',
+    )
 
     # Levy toggles — stored on res.company, scoped per company
     customs_enable_vat = fields.Boolean(

@@ -54,7 +54,7 @@
                             groups="advance_landed_cost.group_customs_manager"/>
                 </xpath>
 
-                <!-- ── 2a. Stat buttons for bill counts ── -->
+                <!-- ── 2a. Stat buttons for bill counts and journal entries ── -->
                 <xpath expr="//div[@name='button_box']" position="inside">
                     <button name="action_view_customs_bills"
                             type="object"
@@ -82,6 +82,16 @@
                         <field name="insurance_bill_count"
                                widget="statinfo"
                                string="Insurance Bills"/>
+                    </button>
+                    <button name="action_view_journal_entries"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-book"
+                            invisible="customs_journal_entry_count == 0"
+                            groups="advance_landed_cost.group_finance_manager">
+                        <field name="customs_journal_entry_count"
+                               widget="statinfo"
+                               string="Journal Entries"/>
                     </button>
                 </xpath>
 
@@ -269,6 +279,24 @@
                                 <field name="new_duty"/>
                                 <field name="reason"/>
                                 <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Tab: Journal Entries (Phase 8) -->
+                    <page name="customs_journal_entries" string="Journal Entries"
+                          groups="advance_landed_cost.group_finance_manager"
+                          invisible="customs_journal_entry_count == 0">
+                        <field name="customs_journal_entry_ids" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="date"/>
+                                <field name="journal_id"/>
+                                <field name="ref"/>
+                                <field name="amount_total"/>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'posted'"
+                                       decoration-warning="state == 'draft'"/>
                             </list>
                         </field>
                     </page>

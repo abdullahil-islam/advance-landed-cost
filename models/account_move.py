@@ -16,6 +16,7 @@ class AccountMove(models.Model):
         ('shipping', 'Shipping Bill'),
         ('insurance', 'Insurance Bill'),
         ('clearing', 'Clearing Bill'),
+        ('journal_entry', 'Customs Journal Entry'),
     ], string='Customs Bill Type',
         help='Categorises this vendor bill within the customs landed cost workflow.',
     )

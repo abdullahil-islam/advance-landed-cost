@@ -63,6 +63,19 @@ class StockLandedCost(models.Model):
         domain=[('customs_bill_type', '=', 'insurance')],
     )
 
+    # ── Customs journal entries (Phase 8) ────────────────────────────────────
+    customs_journal_entry_ids = fields.One2many(
+        'account.move',
+        'customs_landed_cost_id',
+        string='Customs Journal Entries',
+        domain=[('customs_bill_type', '=', 'journal_entry')],
+        readonly=True,
+    )
+    customs_journal_entry_count = fields.Integer(
+        'Journal Entries',
+        compute='_compute_journal_entry_count',
+    )
+
     # ── Bill summary (computed) ───────────────────────────────────────────────
     customs_bill_count = fields.Integer(
         'Customs Bill Count',
@@ -188,6 +201,11 @@ class StockLandedCost(models.Model):
 
     # ── Computed: bill counts + aggregate payment status ─────────────────────
 
+    @api.depends('customs_journal_entry_ids')
+    def _compute_journal_entry_count(self):
+        for lc in self:
+            lc.customs_journal_entry_count = len(lc.customs_journal_entry_ids)
+
     @api.depends(
         'customs_bill_ids', 'shipping_bill_ids', 'insurance_bill_ids',
         'customs_bill_ids.payment_state',
@@ -262,17 +280,179 @@ class StockLandedCost(models.Model):
 
     def action_validate_customs(self):
         """
-        Validate the landed cost: run Odoo's standard inventory valuation,
-        then post custom duty journal entries (Phase 8) and lock the record.
+        Validate the landed cost:
+        1. Run Odoo's standard inventory valuation via button_validate().
+        2. Post the custom duty journal entries.
+        3. Lock the record by setting customs_state = 'done'.
         """
         self.ensure_one()
         if self.customs_state != 'approved':
             raise UserError(
                 "The landed cost must be approved before it can be validated."
             )
-        # Phase 8 will add: super().button_validate() and
-        # self._create_customs_journal_entries() here.
+        # bypass_lock lets button_validate() write native state='done' while
+        # customs_state is still 'approved' (which would otherwise be blocked)
+        result = self.with_context(bypass_lock=True).button_validate()
+        self._create_customs_journal_entries()
         self.with_context(bypass_lock=True).write({'customs_state': 'done'})
+        return result
+
+    def _create_customs_journal_entries(self):
+        """
+        Post a single balanced journal entry for all customs-related liabilities.
+
+        Debit side:
+          - Import VAT  → customs_vat_receivable_account_id
+          - Duty/CESS/SSCL/Freight/Insurance → per-product-category inventory
+            valuation account (property_stock_valuation_account_id)
+
+        Credit side:
+          - Duty/CESS/SSCL → customs_duty_payable_account_id
+          - Import VAT     → customs_vat_payable_account_id
+          - Freight        → customs_freight_payable_account_id
+          - Insurance      → customs_insurance_payable_account_id
+
+        Skips silently if no payable accounts are configured.
+        Warns on chatter if product categories lack valuation accounts.
+        """
+        self.ensure_one()
+        company = self.company_id or self.env.company
+        ref = self.customs_reference
+
+        # ── Locate journal ────────────────────────────────────────────────────
+        journal = company.customs_journal_id or self.env['account.journal'].search(
+            [('company_id', '=', company.id), ('type', '=', 'general')],
+            limit=1,
+        )
+        if not journal:
+            self.message_post(
+                body="⚠ Customs journal entries skipped: no general journal found."
+            )
+            return
+
+        # ── Credit lines (payables) ───────────────────────────────────────────
+        credit_lines = []
+        non_vat_credit = 0.0
+        vat_credit = 0.0
+
+        def _credit(name, account, amount):
+            nonlocal non_vat_credit
+            if amount and account:
+                credit_lines.append({'name': name, 'account_id': account.id,
+                                     'debit': 0.0, 'credit': amount})
+                non_vat_credit += amount
+
+        _credit(f'Customs Duty — {ref}', company.customs_duty_payable_account_id,
+                self.total_duty)
+        _credit(f'CESS — {ref}', company.customs_duty_payable_account_id,
+                self.total_cess)
+        _credit(f'SSCL — {ref}', company.customs_duty_payable_account_id,
+                self.total_sscl)
+        _credit(f'Freight — {ref}', company.customs_freight_payable_account_id,
+                self.total_freight)
+        _credit(f'Insurance — {ref}', company.customs_insurance_payable_account_id,
+                self.total_insurance)
+
+        if (self.total_vat and company.customs_vat_payable_account_id):
+            credit_lines.append({
+                'name': f'Import VAT — {ref}',
+                'account_id': company.customs_vat_payable_account_id.id,
+                'debit': 0.0,
+                'credit': self.total_vat,
+            })
+            vat_credit = self.total_vat
+
+        if not credit_lines:
+            self.message_post(
+                body="⚠ Customs journal entries skipped: no payable accounts are configured. "
+                     "Set them in Settings → Inventory → Customs Duties."
+            )
+            return
+
+        # ── Debit lines ───────────────────────────────────────────────────────
+        debit_lines = []
+
+        # VAT receivable
+        if vat_credit and company.customs_vat_receivable_account_id:
+            debit_lines.append({
+                'name': f'Import VAT Receivable — {ref}',
+                'account_id': company.customs_vat_receivable_account_id.id,
+                'debit': vat_credit,
+                'credit': 0.0,
+            })
+
+        # Inventory valuation per product category
+        if non_vat_credit:
+            valuation_map = {}
+            for line in self.customs_line_ids:
+                account = line.product_id.categ_id.property_stock_valuation_account_id
+                if not account:
+                    continue
+                contrib = (
+                    line.duty_amount + line.cess_amount + line.sscl_amount
+                    + line.freight + line.insurance
+                )
+                if contrib:
+                    valuation_map.setdefault(account.id, {'account': account, 'amount': 0.0})
+                    valuation_map[account.id]['amount'] += contrib
+
+            mapped_total = sum(d['amount'] for d in valuation_map.values())
+            if not valuation_map or abs(mapped_total - non_vat_credit) > 0.01:
+                self.message_post(
+                    body=(
+                        f"⚠ Customs journal entries skipped: inventory valuation accounts "
+                        f"are not configured on all product categories "
+                        f"(mapped {mapped_total:.2f} of {non_vat_credit:.2f}). "
+                        f"Please set 'Stock Valuation Account' on each product category."
+                    )
+                )
+                return
+
+            for data in valuation_map.values():
+                debit_lines.append({
+                    'name': f'Customs Costs — {ref}',
+                    'account_id': data['account'].id,
+                    'debit': data['amount'],
+                    'credit': 0.0,
+                })
+
+        # ── Balance check ─────────────────────────────────────────────────────
+        all_lines = debit_lines + credit_lines
+        total_debit = sum(l['debit'] for l in all_lines)
+        total_credit = sum(l['credit'] for l in all_lines)
+        if abs(total_debit - total_credit) > 0.01:
+            self.message_post(
+                body=(
+                    f"⚠ Customs journal entries skipped: entry is unbalanced "
+                    f"(Dr {total_debit:.2f} ≠ Cr {total_credit:.2f}). "
+                    f"Check that all required accounts are configured."
+                )
+            )
+            return
+
+        # ── Create and post ───────────────────────────────────────────────────
+        entry = self.env['account.move'].create({
+            'move_type': 'entry',
+            'journal_id': journal.id,
+            'ref': ref,
+            'customs_landed_cost_id': self.id,
+            'customs_bill_type': 'journal_entry',
+            'line_ids': [Command.create(l) for l in all_lines],
+        })
+        entry.action_post()
+
+    def action_view_journal_entries(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Customs Journal Entries',
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'domain': [
+                ('customs_landed_cost_id', '=', self.id),
+                ('customs_bill_type', '=', 'journal_entry'),
+            ],
+        }
 
     def action_reset_to_draft(self):
         if not self.env.user.has_group('advance_landed_cost.group_finance_manager'):

@@ -33,6 +33,14 @@
                         </setting>
                     </block>
 
+                    <block title="Customs Duties — Journal"
+                           name="advance_landed_cost_journal">
+                        <setting string="Customs Journal"
+                                 help="Journal used for customs duty entries posted at validation. Falls back to the first general journal if not set.">
+                            <field name="customs_journal_id"/>
+                        </setting>
+                    </block>
+
                     <block title="Customs Duties — Accounting Accounts"
                            name="advance_landed_cost_accounts">
                         <setting string="Customs Duty Payable"
