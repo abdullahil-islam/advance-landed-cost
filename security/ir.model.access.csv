@@ -1,0 +1,20 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_customs_hs_code_user,customs.hs.code (Customs User),model_customs_hs_code,advance_landed_cost.group_customs_user,1,1,1,0
+access_customs_hs_code_manager,customs.hs.code (Customs Manager),model_customs_hs_code,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_hs_code_finance,customs.hs.code (Finance Manager),model_customs_hs_code,advance_landed_cost.group_finance_manager,1,0,0,0
+access_customs_duty_region_user,customs.duty.region (Customs User),model_customs_duty_region,advance_landed_cost.group_customs_user,1,0,0,0
+access_customs_duty_region_manager,customs.duty.region (Customs Manager),model_customs_duty_region,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_duty_levy_user,customs.duty.levy (Customs User),model_customs_duty_levy,advance_landed_cost.group_customs_user,1,0,0,0
+access_customs_duty_levy_manager,customs.duty.levy (Customs Manager),model_customs_duty_levy,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_duty_rate_user,customs.duty.rate (Customs User),model_customs_duty_rate,advance_landed_cost.group_customs_user,1,0,0,0
+access_customs_duty_rate_manager,customs.duty.rate (Customs Manager),model_customs_duty_rate,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_landed_cost_line_user,customs.landed.cost.line (Customs User),model_customs_landed_cost_line,advance_landed_cost.group_customs_user,1,1,1,0
+access_customs_landed_cost_line_manager,customs.landed.cost.line (Customs Manager),model_customs_landed_cost_line,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_cif_override_log_user,customs.cif.override.log (Customs User),model_customs_cif_override_log,advance_landed_cost.group_customs_user,1,0,1,0
+access_customs_cif_override_log_manager,customs.cif.override.log (Customs Manager),model_customs_cif_override_log,advance_landed_cost.group_customs_manager,1,0,1,0
+access_customs_cif_override_log_finance,customs.cif.override.log (Finance Manager),model_customs_cif_override_log,advance_landed_cost.group_finance_manager,1,0,1,0
+access_customs_duty_override_log_user,customs.duty.override.log (Customs User),model_customs_duty_override_log,advance_landed_cost.group_customs_user,1,0,1,0
+access_customs_duty_override_log_manager,customs.duty.override.log (Customs Manager),model_customs_duty_override_log,advance_landed_cost.group_customs_manager,1,0,1,0
+access_customs_duty_override_log_finance,customs.duty.override.log (Finance Manager),model_customs_duty_override_log,advance_landed_cost.group_finance_manager,1,0,1,0
+access_customs_recalculate_wizard_user,customs.recalculate.wizard (Customs User),model_customs_recalculate_wizard,advance_landed_cost.group_customs_user,1,1,1,1
+access_customs_duty_override_wizard_manager,customs.duty.override.wizard (Customs Manager),model_customs_duty_override_wizard,advance_landed_cost.group_customs_manager,1,1,1,1

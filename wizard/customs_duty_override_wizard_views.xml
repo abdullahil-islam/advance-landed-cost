@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_customs_duty_override_wizard_form" model="ir.ui.view">
+            <field name="name">customs.duty.override.wizard.form</field>
+            <field name="model">customs.duty.override.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Manual Duty Override">
+                    <field name="currency_id" invisible="1"/>
+
+                    <group>
+                        <group string="Select Line">
+                            <field name="landed_cost_id" readonly="1"/>
+                            <field name="line_id"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+                    </group>
+
+                    <group string="Current Values" invisible="not line_id">
+                        <group>
+                            <field name="current_duty" readonly="1"/>
+                            <field name="current_vat" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="current_cess" readonly="1"/>
+                            <field name="current_sscl" readonly="1"/>
+                            <field name="current_total" readonly="1" class="fw-bold"/>
+                        </group>
+                    </group>
+
+                    <group string="New Override Values" invisible="not line_id">
+                        <group>
+                            <field name="new_duty"/>
+                            <field name="new_vat"/>
+                        </group>
+                        <group>
+                            <field name="new_cess"/>
+                            <field name="new_sscl"/>
+                            <field name="new_total" readonly="1" class="fw-bold"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="reason" placeholder="Mandatory: explain why the calculated values are being overridden…"/>
+                    </group>
+
+                    <div class="alert alert-warning" role="alert" invisible="not line_id">
+                        <p>
+                            <strong>Note:</strong> Applying this override will set the
+                            <em>Manual Override</em> flag on the selected line. Calculated
+                            duty values will be replaced by the values entered above.
+                            The change is recorded in the Duty Override audit log.
+                        </p>
+                    </div>
+
+                    <footer>
+                        <button name="action_apply_override"
+                                type="object"
+                                string="Apply Override"
+                                class="btn-primary"
+                                invisible="not line_id"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

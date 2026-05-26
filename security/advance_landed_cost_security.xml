@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--
+            Multi-company record rules.
+            All users see: their own company's records OR global records
+            (company_id = False — shared across all companies).
+        -->
+
+        <!-- Phase 2: HS Code -->
+        <record id="rule_customs_hs_code_company" model="ir.rule">
+            <field name="name">HS Code: Multi-Company</field>
+            <field name="model_id" ref="model_customs_hs_code"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 3: Duty Region -->
+        <record id="rule_customs_duty_region_company" model="ir.rule">
+            <field name="name">Duty Region: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_region"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 3: Duty Levy -->
+        <record id="rule_customs_duty_levy_company" model="ir.rule">
+            <field name="name">Duty Levy: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_levy"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 3: Duty Rate -->
+        <record id="rule_customs_duty_rate_company" model="ir.rule">
+            <field name="name">Duty Rate: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_rate"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 4: Landed Cost Line -->
+        <record id="rule_customs_landed_cost_line_company" model="ir.rule">
+            <field name="name">Landed Cost Line: Multi-Company</field>
+            <field name="model_id" ref="model_customs_landed_cost_line"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 4: CIF Override Log -->
+        <record id="rule_customs_cif_override_log_company" model="ir.rule">
+            <field name="name">CIF Override Log: Multi-Company</field>
+            <field name="model_id" ref="model_customs_cif_override_log"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 4: Duty Override Log -->
+        <record id="rule_customs_duty_override_log_company" model="ir.rule">
+            <field name="name">Duty Override Log: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_override_log"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+    </data>
+</odoo>

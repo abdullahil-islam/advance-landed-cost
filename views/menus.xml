@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Root menu under Inventory → Configuration -->
+        <menuitem
+            id="menu_advance_landed_cost_root"
+            name="Customs Duties"
+            parent="stock.menu_stock_config_settings"
+            sequence="50"
+            groups="advance_landed_cost.group_customs_user"/>
+
+        <!-- Phase 2: HS Code Management -->
+        <menuitem
+            id="menu_customs_hs_code"
+            name="HS Codes"
+            parent="advance_landed_cost.menu_advance_landed_cost_root"
+            action="advance_landed_cost.action_customs_hs_code"
+            sequence="10"
+            groups="advance_landed_cost.group_customs_user"/>
+
+        <!-- Phase 3: Rate Configuration -->
+        <menuitem
+            id="menu_customs_duty_rate"
+            name="Duty Rates"
+            parent="advance_landed_cost.menu_advance_landed_cost_root"
+            action="advance_landed_cost.action_customs_duty_rate"
+            sequence="20"
+            groups="advance_landed_cost.group_customs_manager"/>
+
+        <menuitem
+            id="menu_customs_duty_region"
+            name="Trade Regions"
+            parent="advance_landed_cost.menu_advance_landed_cost_root"
+            action="advance_landed_cost.action_customs_duty_region"
+            sequence="30"
+            groups="advance_landed_cost.group_customs_manager"/>
+
+        <menuitem
+            id="menu_customs_duty_levy"
+            name="Levy Types"
+            parent="advance_landed_cost.menu_advance_landed_cost_root"
+            action="advance_landed_cost.action_customs_duty_levy"
+            sequence="40"
+            groups="advance_landed_cost.group_customs_manager"/>
+
+    </data>
+</odoo>

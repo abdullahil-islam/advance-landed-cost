@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_stock_landed_cost_form_inherit_customs" model="ir.ui.view">
+            <field name="name">stock.landed.cost.form.inherit.advance_landed_cost</field>
+            <field name="model">stock.landed.cost</field>
+            <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form"/>
+            <field name="arch" type="xml">
+
+                <!-- ── 1. Customs status bar and action buttons in header ── -->
+                <xpath expr="//header/field[@name='state']" position="before">
+                    <field name="customs_state"
+                           widget="statusbar"
+                           statusbar_visible="draft,confirmed,approved,done"/>
+                    <button name="action_confirm"
+                            type="object"
+                            string="Confirm"
+                            class="btn-primary"
+                            invisible="customs_state != 'draft'"
+                            groups="advance_landed_cost.group_customs_user"/>
+                    <button name="action_approve"
+                            type="object"
+                            string="Approve"
+                            class="btn-primary"
+                            invisible="customs_state != 'confirmed'"
+                            groups="advance_landed_cost.group_finance_manager"/>
+                    <button name="action_validate_customs"
+                            type="object"
+                            string="Validate &amp; Post"
+                            class="btn-primary"
+                            invisible="customs_state != 'approved'"
+                            groups="advance_landed_cost.group_finance_manager"/>
+                    <button name="action_reset_to_draft"
+                            type="object"
+                            string="Reset to Draft"
+                            invisible="customs_state not in ('confirmed', 'approved')"
+                            groups="advance_landed_cost.group_finance_manager"/>
+                    <!-- Bill generation buttons -->
+                    <button name="action_generate_customs_bill"
+                            type="object"
+                            string="Generate Customs Bill"
+                            invisible="customs_state not in ('confirmed', 'approved', 'done')"
+                            groups="advance_landed_cost.group_customs_manager"/>
+                    <button name="action_generate_shipping_bill"
+                            type="object"
+                            string="Generate Shipping Bill"
+                            invisible="customs_state not in ('confirmed', 'approved', 'done')"
+                            groups="advance_landed_cost.group_customs_manager"/>
+                    <button name="action_generate_insurance_bill"
+                            type="object"
+                            string="Generate Insurance Bill"
+                            invisible="customs_state not in ('confirmed', 'approved', 'done')"
+                            groups="advance_landed_cost.group_customs_manager"/>
+                </xpath>
+
+                <!-- ── 2a. Stat buttons for bill counts and journal entries ── -->
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_view_customs_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-file-text-o"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="customs_bill_count"
+                               widget="statinfo"
+                               string="Customs Bills"/>
+                    </button>
+                    <button name="action_view_shipping_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-truck"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="shipping_bill_count"
+                               widget="statinfo"
+                               string="Shipping Bills"/>
+                    </button>
+                    <button name="action_view_insurance_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-shield"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="insurance_bill_count"
+                               widget="statinfo"
+                               string="Insurance Bills"/>
+                    </button>
+                    <button name="action_view_journal_entries"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-book"
+                            invisible="customs_journal_entry_count == 0"
+                            groups="advance_landed_cost.group_finance_manager">
+                        <field name="customs_journal_entry_count"
+                               widget="statinfo"
+                               string="Journal Entries"/>
+                    </button>
+                </xpath>
+
+                <!-- ── 2b. Customs reference and configuration fields ── -->
+                <xpath expr="//sheet/group[1]" position="after">
+                    <group>
+                        <group string="Customs Information">
+                            <field name="customs_reference" readonly="1"/>
+                            <field name="country_of_origin_id"/>
+                            <field name="cif_split_method"/>
+                        </group>
+                        <group string="Totals">
+                            <field name="total_cif"/>
+                            <field name="total_duty"/>
+                            <field name="total_vat"/>
+                            <field name="grand_total" class="fw-bold"/>
+                            <field name="bills_payment_state"
+                                   widget="bill_summary"
+                                   nolabel="1"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                </xpath>
+
+                <!-- ── 3. Four new notebook tabs ── -->
+                <xpath expr="//notebook" position="inside">
+
+                    <!-- Tab: CIF Calculation -->
+                    <page name="cif_calculation" string="CIF Calculation">
+                        <field name="customs_line_ids"
+                               readonly="customs_state in ('approved', 'done')"
+                               context="{'default_landed_cost_id': active_id}">
+                            <list editable="bottom">
+                                <field name="product_id"/>
+                                <field name="hs_code_id" readonly="1" optional="show"/>
+                                <field name="quantity"/>
+                                <field name="product_cost"/>
+                                <field name="freight" readonly="1" optional="show"/>
+                                <field name="insurance" readonly="1" optional="show"/>
+                                <field name="cif_override"
+                                       optional="show"
+                                       invisible="not manual_override"/>
+                                <field name="cif_value" readonly="1"/>
+                                <field name="manual_override" optional="show"/>
+                                <field name="override_reason"
+                                       optional="hide"
+                                       invisible="not manual_override"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                        <group class="oe_subtotal_footer">
+                            <field name="total_product_cost" readonly="1"/>
+                            <field name="total_freight" readonly="1"/>
+                            <field name="total_insurance" readonly="1"/>
+                            <field name="total_cif" readonly="1" class="fw-bold"/>
+                        </group>
+                    </page>
+
+                    <!-- Tab: Duty Calculations -->
+                    <page name="duty_calculations" string="Duty Calculations">
+                        <div class="d-flex gap-2 mb-2">
+                            <button name="action_open_duty_override_wizard"
+                                    type="object"
+                                    string="Manual Duty Override"
+                                    class="btn-secondary"
+                                    invisible="customs_state in ('approved', 'done')"
+                                    groups="advance_landed_cost.group_customs_manager"
+                                    help="Manually override duty, VAT, CESS and SSCL
+                                          for a specific line. Requires Customs Manager
+                                          access and a mandatory reason."/>
+                        </div>
+                        <field name="customs_line_ids" readonly="1">
+                            <list>
+                                <field name="product_id"/>
+                                <field name="hs_code_id"/>
+                                <field name="cif_value"/>
+                                <field name="tax_base" optional="show"/>
+                                <field name="duty_rate_id" optional="show"/>
+                                <field name="duty_amount"/>
+                                <field name="vat_amount"/>
+                                <field name="cess_amount" optional="show"/>
+                                <field name="sscl_amount" optional="show"/>
+                                <field name="total_taxes"/>
+                                <field name="manual_override" optional="show"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                        <group class="oe_subtotal_footer">
+                            <field name="total_duty" readonly="1"/>
+                            <field name="total_vat" readonly="1"/>
+                            <field name="total_cess" readonly="1"/>
+                            <field name="total_sscl" readonly="1"/>
+                            <field name="grand_total" readonly="1" class="fw-bold"/>
+                        </group>
+                    </page>
+
+                    <!-- Tab: Customs Bills -->
+                    <page name="customs_bills_tab" string="Customs Bills">
+                        <field name="customs_bill_ids"
+                               readonly="customs_state == 'done'"
+                               context="{'default_customs_landed_cost_id': active_id,
+                                         'default_customs_bill_type': 'customs',
+                                         'default_move_type': 'in_invoice'}">
+                            <list>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="invoice_date"/>
+                                <field name="currency_id" optional="show"/>
+                                <field name="amount_total"/>
+                                <field name="payment_state" widget="badge"
+                                       decoration-success="payment_state == 'paid'"
+                                       decoration-warning="payment_state == 'partial'"
+                                       decoration-danger="payment_state == 'not_paid'"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Tab: Shipping &amp; Insurance Bills -->
+                    <page name="shipping_insurance_bills" string="Shipping &amp; Insurance Bills">
+                        <group string="Shipping Bills">
+                            <field name="shipping_bill_ids"
+                                   nolabel="1"
+                                   readonly="customs_state == 'done'"
+                                   context="{'default_customs_landed_cost_id': active_id,
+                                             'default_customs_bill_type': 'shipping',
+                                             'default_move_type': 'in_invoice'}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="invoice_date"/>
+                                    <field name="amount_total"/>
+                                    <field name="payment_state" widget="badge"
+                                           decoration-success="payment_state == 'paid'"
+                                           decoration-warning="payment_state == 'partial'"
+                                           decoration-danger="payment_state == 'not_paid'"/>
+                                </list>
+                            </field>
+                        </group>
+                        <group string="Insurance Bills">
+                            <field name="insurance_bill_ids"
+                                   nolabel="1"
+                                   readonly="customs_state == 'done'"
+                                   context="{'default_customs_landed_cost_id': active_id,
+                                             'default_customs_bill_type': 'insurance',
+                                             'default_move_type': 'in_invoice'}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="invoice_date"/>
+                                    <field name="amount_total"/>
+                                    <field name="payment_state" widget="badge"
+                                           decoration-success="payment_state == 'paid'"
+                                           decoration-warning="payment_state == 'partial'"
+                                           decoration-danger="payment_state == 'not_paid'"/>
+                                </list>
+                            </field>
+                        </group>
+                    </page>
+
+                    <!-- Tab: CIF Override Log -->
+                    <page name="cif_override_log" string="CIF Override Log"
+                          groups="advance_landed_cost.group_customs_manager">
+                        <field name="cif_override_log_ids" readonly="1">
+                            <list>
+                                <field name="timestamp"/>
+                                <field name="user_id"/>
+                                <field name="line_id"/>
+                                <field name="old_cif"/>
+                                <field name="new_cif"/>
+                                <field name="reason"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Tab: Duty Override Log -->
+                    <page name="duty_override_log" string="Duty Override Log"
+                          groups="advance_landed_cost.group_customs_manager">
+                        <field name="duty_override_log_ids" readonly="1">
+                            <list>
+                                <field name="timestamp"/>
+                                <field name="user_id"/>
+                                <field name="line_id"/>
+                                <field name="old_duty"/>
+                                <field name="new_duty"/>
+                                <field name="reason"/>
+                                <field name="currency_id" column_invisible="True"/>
+                            </list>
+                        </field>
+                    </page>
+
+                    <!-- Tab: Journal Entries (Phase 8) -->
+                    <page name="customs_journal_entries" string="Journal Entries"
+                          groups="advance_landed_cost.group_finance_manager"
+                          invisible="customs_journal_entry_count == 0">
+                        <field name="customs_journal_entry_ids" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="date"/>
+                                <field name="journal_id"/>
+                                <field name="ref"/>
+                                <field name="amount_total"/>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'posted'"
+                                       decoration-warning="state == 'draft'"/>
+                            </list>
+                        </field>
+                    </page>
+
+                </xpath>
+
+            </field>
+        </record>
+
+        <!-- Phase 5: Recalculate button injected into the CIF Calculation tab -->
+        <record id="view_stock_landed_cost_cif_engine" model="ir.ui.view">
+            <field name="name">stock.landed.cost.form.inherit.cif_engine</field>
+            <field name="model">stock.landed.cost</field>
+            <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='cif_calculation']/field[@name='customs_line_ids']"
+                       position="before">
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_open_recalculate_wizard"
+                                type="object"
+                                string="Recalculate CIF &amp; Duties"
+                                class="btn-secondary"
+                                invisible="customs_state in ('approved', 'done')"
+                                groups="advance_landed_cost.group_customs_manager"
+                                help="Redistribute freight and insurance from linked bills
+                                      across all non-overridden lines using the selected
+                                      split method, then recompute duties."/>
+                        <span class="text-muted align-self-center small"
+                              invisible="customs_state in ('approved', 'done')">
+                            Split method:
+                        </span>
+                        <field name="cif_split_method"
+                               widget="badge"
+                               class="align-self-center"
+                               invisible="customs_state in ('approved', 'done')"
+                               readonly="customs_state in ('approved', 'done')"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

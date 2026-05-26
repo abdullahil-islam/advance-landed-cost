@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Reference sequence for advance landed cost records: ALC/2026/00001 -->
+        <record id="sequence_advance_landed_cost" model="ir.sequence">
+            <field name="name">Advance Landed Cost Reference</field>
+            <field name="code">advance.landed.cost</field>
+            <field name="prefix">ALC/%(year)s/</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="number_next">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

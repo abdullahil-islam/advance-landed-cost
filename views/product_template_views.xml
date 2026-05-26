@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Inject HS Code fields into the product template form -->
+        <record id="view_product_template_hs_code_inherit" model="ir.ui.view">
+            <field name="name">product.template.form.inherit.advance_landed_cost</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <!--
+                    categ_id sits in the General Information tab.
+                    We inject our HS classification fields immediately after it.
+                -->
+                <field name="categ_id" position="after">
+                    <field name="inherit_hs_from_category" widget="boolean_toggle"/>
+                    <field name="hs_code_id"
+                           invisible="inherit_hs_from_category"/>
+                    <field name="effective_hs_code_id"
+                           readonly="1"
+                           invisible="not inherit_hs_from_category"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>

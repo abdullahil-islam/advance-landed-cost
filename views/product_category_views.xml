@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Inject HS Code field into the product category form -->
+        <record id="view_product_category_hs_code_inherit" model="ir.ui.view">
+            <field name="name">product.category.form.inherit.advance_landed_cost</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet/group" position="after">
+                    <group string="Customs Classification">
+                        <field name="hs_code_id"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
