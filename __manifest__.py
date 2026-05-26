@@ -53,7 +53,8 @@
     ],
     'assets': {
         'web.assets_backend': [
-            # OWL components added from Phase 7 onward
+            'advance_landed_cost/static/src/components/bill_summary_widget/bill_summary_widget.js',
+            'advance_landed_cost/static/src/components/bill_summary_widget/bill_summary_widget.xml',
         ],
     },
     'installable': True,

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="advance_landed_cost.BillSummaryWidget">
+        <span t-attf-class="{{ statusConfig.classes }} align-self-center">
+            <t t-esc="statusConfig.label"/>
+        </span>
+    </t>
+</templates>

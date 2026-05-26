@@ -54,7 +54,38 @@
                             groups="advance_landed_cost.group_customs_manager"/>
                 </xpath>
 
-                <!-- ── 2. Customs reference and configuration fields ── -->
+                <!-- ── 2a. Stat buttons for bill counts ── -->
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_view_customs_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-file-text-o"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="customs_bill_count"
+                               widget="statinfo"
+                               string="Customs Bills"/>
+                    </button>
+                    <button name="action_view_shipping_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-truck"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="shipping_bill_count"
+                               widget="statinfo"
+                               string="Shipping Bills"/>
+                    </button>
+                    <button name="action_view_insurance_bills"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-shield"
+                            groups="advance_landed_cost.group_customs_user">
+                        <field name="insurance_bill_count"
+                               widget="statinfo"
+                               string="Insurance Bills"/>
+                    </button>
+                </xpath>
+
+                <!-- ── 2b. Customs reference and configuration fields ── -->
                 <xpath expr="//sheet/group[1]" position="after">
                     <group>
                         <group string="Customs Information">
@@ -67,6 +98,10 @@
                             <field name="total_duty"/>
                             <field name="total_vat"/>
                             <field name="grand_total" class="fw-bold"/>
+                            <field name="bills_payment_state"
+                                   widget="bill_summary"
+                                   nolabel="1"
+                                   readonly="1"/>
                         </group>
                     </group>
                 </xpath>

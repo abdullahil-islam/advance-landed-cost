@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import Command, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 
@@ -61,6 +61,28 @@ class StockLandedCost(models.Model):
         'customs_landed_cost_id',
         string='Insurance Bills',
         domain=[('customs_bill_type', '=', 'insurance')],
+    )
+
+    # ── Bill summary (computed) ───────────────────────────────────────────────
+    customs_bill_count = fields.Integer(
+        'Customs Bill Count',
+        compute='_compute_bill_summary',
+    )
+    shipping_bill_count = fields.Integer(
+        'Shipping Bill Count',
+        compute='_compute_bill_summary',
+    )
+    insurance_bill_count = fields.Integer(
+        'Insurance Bill Count',
+        compute='_compute_bill_summary',
+    )
+    bills_payment_state = fields.Selection([
+        ('all_paid', 'All Bills Paid'),
+        ('partial', 'Partially Paid'),
+        ('not_paid', 'Bills Unpaid'),
+        ('no_bills', 'No Bills'),
+    ], string='Bills Status', compute='_compute_bill_summary',
+        help='Aggregate payment status across all linked customs, shipping, and insurance bills.',
     )
 
     # ── Audit logs ────────────────────────────────────────────────────────────
@@ -163,6 +185,34 @@ class StockLandedCost(models.Model):
                         f"Contact a Finance Manager to unlock."
                     )
         return super().write(vals)
+
+    # ── Computed: bill counts + aggregate payment status ─────────────────────
+
+    @api.depends(
+        'customs_bill_ids', 'shipping_bill_ids', 'insurance_bill_ids',
+        'customs_bill_ids.payment_state',
+        'shipping_bill_ids.payment_state',
+        'insurance_bill_ids.payment_state',
+    )
+    def _compute_bill_summary(self):
+        for lc in self:
+            lc.customs_bill_count = len(lc.customs_bill_ids)
+            lc.shipping_bill_count = len(lc.shipping_bill_ids)
+            lc.insurance_bill_count = len(lc.insurance_bill_ids)
+            all_bills = lc.customs_bill_ids | lc.shipping_bill_ids | lc.insurance_bill_ids
+            if not all_bills:
+                lc.bills_payment_state = 'no_bills'
+            elif all(
+                b.payment_state in ('paid', 'in_payment') for b in all_bills
+            ):
+                lc.bills_payment_state = 'all_paid'
+            elif any(
+                b.payment_state in ('paid', 'in_payment', 'partial')
+                for b in all_bills
+            ):
+                lc.bills_payment_state = 'partial'
+            else:
+                lc.bills_payment_state = 'not_paid'
 
     # ── Computed totals ───────────────────────────────────────────────────────
 
@@ -341,7 +391,7 @@ class StockLandedCost(models.Model):
             'context': {'default_landed_cost_id': self.id},
         }
 
-    # ── Bill generation (Phase 7 adds full implementation) ───────────────────
+    # ── Bill generation ───────────────────────────────────────────────────────
 
     def action_generate_customs_bill(self):
         self.ensure_one()
@@ -356,16 +406,108 @@ class StockLandedCost(models.Model):
         return self._generate_bill('insurance')
 
     def _generate_bill(self, bill_type):
-        """Stub — full implementation in Phase 7."""
-        bill = self.env['account.move'].create({
+        """
+        Create a vendor bill pre-filled with duty/cost lines and open it.
+
+        If the landed cost currency differs from the company's base currency,
+        the bill is created in the landed cost currency and the original amount
+        is also stored in customs_amount_foreign for reference.
+        """
+        self.ensure_one()
+        company = self.company_id or self.env.company
+        currency = self.currency_id or company.currency_id
+
+        bill_vals = {
             'move_type': 'in_invoice',
             'customs_landed_cost_id': self.id,
             'customs_bill_type': bill_type,
-        })
+            'invoice_line_ids': self._build_bill_lines(bill_type, company),
+        }
+        if currency != company.currency_id:
+            bill_vals['currency_id'] = currency.id
+
+        bill = self.env['account.move'].create(bill_vals)
+
+        if currency != company.currency_id:
+            bill.write({
+                'customs_amount_foreign': bill.amount_untaxed,
+                'customs_foreign_currency_id': currency.id,
+            })
+
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'account.move',
             'res_id': bill.id,
             'view_mode': 'form',
             'target': 'current',
+        }
+
+    def _build_bill_lines(self, bill_type, company):
+        """
+        Return a list of Command.create dicts for the invoice_line_ids of
+        the new bill.  Lines with zero amount are skipped.
+        """
+        def _line(name, amount, account):
+            if not amount:
+                return None
+            vals = {'name': name, 'price_unit': amount, 'quantity': 1.0}
+            if account:
+                vals['account_id'] = account.id
+            return Command.create(vals)
+
+        if bill_type == 'customs':
+            entries = [
+                ('Customs Duty', self.total_duty,
+                 company.customs_duty_payable_account_id),
+                ('Import VAT', self.total_vat,
+                 company.customs_vat_payable_account_id),
+                ('CESS', self.total_cess,
+                 company.customs_duty_payable_account_id),
+                ('SSCL', self.total_sscl,
+                 company.customs_duty_payable_account_id),
+            ]
+            return [cmd for name, amt, acc in entries
+                    if (cmd := _line(name, amt, acc))]
+
+        if bill_type == 'shipping':
+            cmd = _line('Freight / Shipping', self.total_freight,
+                        company.customs_freight_payable_account_id)
+            return [cmd] if cmd else []
+
+        if bill_type == 'insurance':
+            cmd = _line('Insurance', self.total_insurance,
+                        company.customs_insurance_payable_account_id)
+            return [cmd] if cmd else []
+
+        return []
+
+    # ── Stat-button actions ───────────────────────────────────────────────────
+
+    def action_view_customs_bills(self):
+        self.ensure_one()
+        return self._bill_action('Customs Bills', 'customs')
+
+    def action_view_shipping_bills(self):
+        self.ensure_one()
+        return self._bill_action('Shipping Bills', 'shipping')
+
+    def action_view_insurance_bills(self):
+        self.ensure_one()
+        return self._bill_action('Insurance Bills', 'insurance')
+
+    def _bill_action(self, name, bill_type):
+        return {
+            'type': 'ir.actions.act_window',
+            'name': name,
+            'res_model': 'account.move',
+            'view_mode': 'list,form',
+            'domain': [
+                ('customs_landed_cost_id', '=', self.id),
+                ('customs_bill_type', '=', bill_type),
+            ],
+            'context': {
+                'default_customs_landed_cost_id': self.id,
+                'default_customs_bill_type': bill_type,
+                'default_move_type': 'in_invoice',
+            },
         }
