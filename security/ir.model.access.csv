@@ -8,3 +8,11 @@ access_customs_duty_levy_user,customs.duty.levy (Customs User),model_customs_dut
 access_customs_duty_levy_manager,customs.duty.levy (Customs Manager),model_customs_duty_levy,advance_landed_cost.group_customs_manager,1,1,1,1
 access_customs_duty_rate_user,customs.duty.rate (Customs User),model_customs_duty_rate,advance_landed_cost.group_customs_user,1,0,0,0
 access_customs_duty_rate_manager,customs.duty.rate (Customs Manager),model_customs_duty_rate,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_landed_cost_line_user,customs.landed.cost.line (Customs User),model_customs_landed_cost_line,advance_landed_cost.group_customs_user,1,1,1,0
+access_customs_landed_cost_line_manager,customs.landed.cost.line (Customs Manager),model_customs_landed_cost_line,advance_landed_cost.group_customs_manager,1,1,1,1
+access_customs_cif_override_log_user,customs.cif.override.log (Customs User),model_customs_cif_override_log,advance_landed_cost.group_customs_user,1,0,1,0
+access_customs_cif_override_log_manager,customs.cif.override.log (Customs Manager),model_customs_cif_override_log,advance_landed_cost.group_customs_manager,1,0,1,0
+access_customs_cif_override_log_finance,customs.cif.override.log (Finance Manager),model_customs_cif_override_log,advance_landed_cost.group_finance_manager,1,0,1,0
+access_customs_duty_override_log_user,customs.duty.override.log (Customs User),model_customs_duty_override_log,advance_landed_cost.group_customs_user,1,0,1,0
+access_customs_duty_override_log_manager,customs.duty.override.log (Customs Manager),model_customs_duty_override_log,advance_landed_cost.group_customs_manager,1,0,1,0
+access_customs_duty_override_log_finance,customs.duty.override.log (Finance Manager),model_customs_duty_override_log,advance_landed_cost.group_finance_manager,1,0,1,0

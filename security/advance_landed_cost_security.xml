@@ -4,7 +4,7 @@
 
         <!--
             Multi-company record rules.
-            Domain: users see their own company's records OR global records
+            All users see: their own company's records OR global records
             (company_id = False — shared across all companies).
         -->
 
@@ -40,10 +40,29 @@
             <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         </record>
 
-        <!--
-            Phase 4+ rules (landed cost line, override logs) are added
-            alongside their respective model files.
-        -->
+        <!-- Phase 4: Landed Cost Line -->
+        <record id="rule_customs_landed_cost_line_company" model="ir.rule">
+            <field name="name">Landed Cost Line: Multi-Company</field>
+            <field name="model_id" ref="model_customs_landed_cost_line"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 4: CIF Override Log -->
+        <record id="rule_customs_cif_override_log_company" model="ir.rule">
+            <field name="name">CIF Override Log: Multi-Company</field>
+            <field name="model_id" ref="model_customs_cif_override_log"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <!-- Phase 4: Duty Override Log -->
+        <record id="rule_customs_duty_override_log_company" model="ir.rule">
+            <field name="name">Duty Override Log: Multi-Company</field>
+            <field name="model_id" ref="model_customs_duty_override_log"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
 
     </data>
 </odoo>

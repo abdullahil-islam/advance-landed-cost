@@ -41,6 +41,9 @@
         'views/customs_duty_levy_views.xml',
         'views/customs_duty_rate_views.xml',
         'views/res_config_settings_views.xml',
+        # Views — Phase 4: Landed Cost Extension
+        'views/stock_landed_cost_views.xml',
+        'views/account_move_views.xml',
         # Menus — after all actions are defined
         'views/menus.xml',
     ],

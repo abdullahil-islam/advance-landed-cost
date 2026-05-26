@@ -5,3 +5,8 @@ from . import customs_duty_region
 from . import customs_duty_levy
 from . import customs_duty_rate
 from . import res_config_settings
+from . import customs_landed_cost_line
+from . import customs_cif_override_log
+from . import customs_duty_override_log
+from . import stock_landed_cost
+from . import account_move
