@@ -16,3 +16,4 @@ access_customs_cif_override_log_finance,customs.cif.override.log (Finance Manage
 access_customs_duty_override_log_user,customs.duty.override.log (Customs User),model_customs_duty_override_log,advance_landed_cost.group_customs_user,1,0,1,0
 access_customs_duty_override_log_manager,customs.duty.override.log (Customs Manager),model_customs_duty_override_log,advance_landed_cost.group_customs_manager,1,0,1,0
 access_customs_duty_override_log_finance,customs.duty.override.log (Finance Manager),model_customs_duty_override_log,advance_landed_cost.group_finance_manager,1,0,1,0
+access_customs_recalculate_wizard_user,customs.recalculate.wizard (Customs User),model_customs_recalculate_wizard,advance_landed_cost.group_customs_user,1,1,1,1

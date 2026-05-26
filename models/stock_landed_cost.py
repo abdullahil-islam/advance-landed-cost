@@ -227,6 +227,71 @@ class StockLandedCost(models.Model):
                 f"Please assign HS codes before confirming."
             )
 
+    # ── CIF Distribution Engine (Phase 5) ────────────────────────────────────
+
+    def action_open_recalculate_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'customs.recalculate.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_landed_cost_id': self.id},
+        }
+
+    def _distribute_cif(self):
+        """
+        Distribute freight and insurance from linked bills across all
+        non-overridden customs lines using the configured split method.
+
+        Overridden lines (manual_override=True) are skipped; their
+        freight and insurance values are left untouched.
+        """
+        self.ensure_one()
+        lines = self.customs_line_ids.filtered(lambda l: not l.manual_override)
+        if not lines:
+            return
+
+        total_freight = sum(self.shipping_bill_ids.mapped('amount_untaxed'))
+        total_insurance = sum(self.insurance_bill_ids.mapped('amount_untaxed'))
+
+        weights = self._compute_split_weights(lines, self.cif_split_method)
+        total_weight = sum(weights.values()) or 1.0
+
+        for line in lines:
+            ratio = weights.get(line.id, 0.0) / total_weight
+            line.write({
+                'freight': total_freight * ratio,
+                'insurance': total_insurance * ratio,
+            })
+
+    def _compute_split_weights(self, lines, method):
+        """
+        Return a dict {line.id: weight} for the given split method.
+
+        Falls back to equal share when all computed weights are zero
+        (e.g. all products have weight=0 for the 'by_weight' method).
+        """
+        weights = {}
+        for line in lines:
+            qty = line.quantity or 1.0
+            if method == 'by_quantity':
+                weights[line.id] = qty
+            elif method == 'by_weight':
+                weights[line.id] = (line.product_id.weight or 0.0) * qty
+            elif method == 'by_volume':
+                weights[line.id] = (line.product_id.volume or 0.0) * qty
+            elif method == 'by_current_cost':
+                weights[line.id] = line.product_cost or 1.0
+            else:  # 'equal' and any unrecognised value
+                weights[line.id] = 1.0
+
+        # Guard: if every weight is zero, fall back to equal distribution
+        if not any(weights.values()):
+            weights = {lid: 1.0 for lid in weights}
+
+        return weights
+
     # ── Bill generation (Phase 7 adds full implementation) ───────────────────
 
     def action_generate_customs_bill(self):

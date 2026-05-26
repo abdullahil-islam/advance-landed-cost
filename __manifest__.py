@@ -44,6 +44,8 @@
         # Views — Phase 4: Landed Cost Extension
         'views/stock_landed_cost_views.xml',
         'views/account_move_views.xml',
+        # Wizards — Phase 5: CIF Engine
+        'wizard/customs_recalculate_wizard_views.xml',
         # Menus — after all actions are defined
         'views/menus.xml',
     ],

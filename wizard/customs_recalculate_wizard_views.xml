@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_customs_recalculate_wizard_form" model="ir.ui.view">
+            <field name="name">customs.recalculate.wizard.form</field>
+            <field name="model">customs.recalculate.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Recalculate CIF &amp; Duties">
+                    <group>
+                        <field name="landed_cost_id" readonly="1"/>
+                    </group>
+
+                    <group string="Options">
+                        <field name="reset_overrides"/>
+                        <field name="overridden_line_count"
+                               readonly="1"
+                               invisible="not reset_overrides"
+                               string="Lines that will be unlocked"/>
+                    </group>
+
+                    <group string="Audit">
+                        <field name="reason"
+                               placeholder="State why CIF is being recalculated — this is recorded in the override audit log..."
+                               nolabel="1"/>
+                    </group>
+
+                    <div class="alert alert-warning"
+                         role="alert"
+                         invisible="not reset_overrides or overridden_line_count == 0">
+                        <strong>Warning:</strong>
+                        <field name="overridden_line_count" readonly="1" nolabel="1"/>
+                        line(s) with manual overrides will be unlocked and their
+                        CIF values replaced with automatically calculated amounts.
+                        This action is logged in the audit trail.
+                    </div>
+
+                    <footer>
+                        <button name="action_recalculate"
+                                type="object"
+                                string="Recalculate"
+                                class="btn-primary"/>
+                        <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

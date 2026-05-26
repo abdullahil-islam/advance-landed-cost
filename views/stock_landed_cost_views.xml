@@ -197,5 +197,38 @@
             </field>
         </record>
 
+        <!-- Phase 5: Recalculate button injected into the CIF Calculation tab -->
+        <record id="view_stock_landed_cost_cif_engine" model="ir.ui.view">
+            <field name="name">stock.landed.cost.form.inherit.cif_engine</field>
+            <field name="model">stock.landed.cost</field>
+            <field name="inherit_id" ref="stock_landed_costs.view_stock_landed_cost_form"/>
+            <field name="priority">20</field>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='cif_calculation']/field[@name='customs_line_ids']"
+                       position="before">
+                    <div class="d-flex gap-2 mb-2">
+                        <button name="action_open_recalculate_wizard"
+                                type="object"
+                                string="Recalculate CIF &amp; Duties"
+                                class="btn-secondary"
+                                invisible="customs_state in ('approved', 'done')"
+                                groups="advance_landed_cost.group_customs_manager"
+                                help="Redistribute freight and insurance from linked bills
+                                      across all non-overridden lines using the selected
+                                      split method, then recompute duties."/>
+                        <span class="text-muted align-self-center small"
+                              invisible="customs_state in ('approved', 'done')">
+                            Split method:
+                        </span>
+                        <field name="cif_split_method"
+                               widget="badge"
+                               class="align-self-center"
+                               invisible="customs_state in ('approved', 'done')"
+                               readonly="customs_state in ('approved', 'done')"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
     </data>
 </odoo>
